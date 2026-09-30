@@ -8,8 +8,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="里好損耗" />
-  <link rel="apple-touch-icon" href="icon.png?v=5" />
-  <link rel="icon" type="image/png" href="icon.png?v=5" />
+  <link rel="apple-touch-icon" href="icon.png?v=8" />
+  <link rel="icon" type="image/png" href="icon.png?v=8" />
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -55,7 +55,7 @@
   <header class="bg-liho-red text-white shadow-md sticky top-0 z-50 px-4 py-3">
     <div class="max-w-md mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-2.5">
-        <img src="icon.png?v=5" alt="里好損耗" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-white/20 shrink-0" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' rx=\'20\' fill=\'%23FAF7F2\'/><text x=\'50%\' y=\'56%\' font-family=\'sans-serif\' font-weight=\'900\' font-size=\'38\' fill=\'%232C2724\' dominant-baseline=\'middle\' text-anchor=\'middle\'>損耗</text></svg>';" />
+        <img src="icon.png?v=8" alt="里好損耗" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-white/20 shrink-0" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' rx=\'20\' fill=\'%23FAF7F2\'/><text x=\'50%\' y=\'56%\' font-family=\'sans-serif\' font-weight=\'900\' font-size=\'38\' fill=\'%232C2724\' dominant-baseline=\'middle\' text-anchor=\'middle\'>損耗</text></svg>';" />
         <div>
           <h1 class="text-base font-bold tracking-wider leading-tight">里好餐桌 • 食材損耗精算</h1>
           <p class="text-[11px] text-white/80 tracking-widest font-light">EAT BETTER. LIVE BETTER.</p>
@@ -101,14 +101,13 @@
       <!-- 食材快捷按鈕區 -->
       <div class="grid grid-cols-4 gap-2" id="quickItemGrid"></div>
 
-      <!-- 單價與單位切換區 (新增：公斤 vs 台斤) -->
+      <!-- 單價與單位切換區 -->
       <div class="pt-2 border-t border-liho-border/60 flex items-center justify-between gap-2">
         <button type="button" onclick="openAddCustomModal()" class="py-1.5 px-2.5 bg-liho-lightGreen text-liho-green border border-liho-green/40 rounded-xl text-xs font-bold flex items-center hover:bg-liho-green hover:text-white transition">
           <i class="fa-solid fa-plus mr-1"></i>新增菜名
         </button>
 
         <div class="flex items-center space-x-1.5">
-          <!-- 單位切換膠囊 -->
           <div class="inline-flex rounded-lg bg-stone-100 p-0.5 border border-liho-border text-[11px] font-bold">
             <button type="button" id="unitKgBtn" onclick="setCostUnit('kg')" class="px-2 py-1 rounded-md bg-liho-red text-white transition">$/公斤</button>
             <button type="button" id="unitJinBtn" onclick="setCostUnit('jin')" class="px-2 py-1 rounded-md text-liho-subtext transition">$/台斤</button>
@@ -121,10 +120,15 @@
 
     <!-- 步驟 2：輸入重量 -->
     <div class="bg-white p-4 rounded-2xl border border-liho-border shadow-sm space-y-3">
-      <label class="text-xs font-bold text-liho-subtext flex items-center">
-        <span class="w-5 h-5 rounded-full bg-liho-red text-white inline-flex items-center justify-center text-xs mr-1.5">2</span>
-        輸入磅秤克數 (公克 g)
-      </label>
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-bold text-liho-subtext flex items-center">
+          <span class="w-5 h-5 rounded-full bg-liho-red text-white inline-flex items-center justify-center text-xs mr-1.5">2</span>
+          輸入磅秤克數 (公克 g)
+        </label>
+        <button type="button" onclick="setZeroWasteQuick()" class="text-[11px] font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-lg transition">
+          <i class="fa-solid fa-star mr-1"></i>一鍵帶入 0 損耗
+        </button>
+      </div>
 
       <!-- 備料修整模式 -->
       <div id="yieldInputGroup" class="grid grid-cols-2 gap-3">
@@ -138,7 +142,7 @@
           <label class="block text-[11px] font-medium text-liho-subtext mb-1">
             <i class="fa-solid fa-bowl-food mr-1"></i>出餐淨重 (餐重 g)
           </label>
-          <input type="number" id="usableWeightInput" placeholder="例如 2550" oninput="calculateLoss()" class="w-full text-lg font-bold text-center border-2 border-liho-border rounded-xl py-2.5 focus:border-liho-red focus:bg-liho-red/5 outline-none transition" />
+          <input type="number" id="usableWeightInput" placeholder="例如 3000 (可填0損耗)" oninput="calculateLoss()" class="w-full text-lg font-bold text-center border-2 border-liho-border rounded-xl py-2.5 focus:border-liho-red focus:bg-liho-red/5 outline-none transition" />
         </div>
       </div>
 
@@ -146,7 +150,7 @@
       <div id="directInputGroup" class="hidden space-y-3">
         <div>
           <label class="block text-[11px] font-medium text-liho-subtext mb-1">損耗/報廢重量 (g)</label>
-          <input type="number" id="directWasteWeightInput" placeholder="例如 500" oninput="calculateLoss()" class="w-full text-lg font-bold text-center border-2 border-liho-border rounded-xl py-2.5 focus:border-liho-red outline-none" />
+          <input type="number" id="directWasteWeightInput" placeholder="例如 500 (可輸入 0)" oninput="calculateLoss()" class="w-full text-lg font-bold text-center border-2 border-liho-border rounded-xl py-2.5 focus:border-liho-red outline-none" />
         </div>
         <div>
           <label class="block text-[11px] font-medium text-liho-subtext mb-1">報廢具體原因</label>
@@ -159,7 +163,7 @@
       </div>
     </div>
 
-    <!-- 步驟 3：即時損耗金額與良品率儀表板 -->
+    <!-- 步驟 3：即時損耗金額與良品率儀表板 (已將「浪費成本」全面替換為「損耗成本」) -->
     <div class="bg-gradient-to-br from-liho-lightGreen to-white p-4 rounded-2xl border border-liho-green/30 shadow-sm space-y-2">
       <div class="flex items-center justify-between text-xs text-liho-subtext">
         <span class="font-bold flex items-center text-liho-green">
@@ -174,7 +178,7 @@
           <p class="text-2xl font-black text-liho-text"><span id="wasteWeightDisplay">0</span> <span class="text-xs font-normal">g</span></p>
         </div>
         <div class="text-right">
-          <span class="text-xs text-liho-red font-bold">本次浪費成本金額</span>
+          <span class="text-xs text-liho-red font-bold">本次損耗成本金額</span>
           <p class="text-3xl font-black text-liho-red">NT$ <span id="wasteCostDisplay">0</span></p>
         </div>
       </div>
@@ -221,7 +225,7 @@
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-bold text-liho-subtext mb-1">蔬菜食材名稱</label>
-          <input type="text" id="newCustomItemName" placeholder="例如：菠菜、白蘿蔔" class="w-full text-sm border border-liho-border rounded-xl p-2.5 outline-none focus:border-liho-red" />
+          <input type="text" id="newCustomItemName" placeholder="例如：玉米筍、洗選蛋" class="w-full text-sm border border-liho-border rounded-xl p-2.5 outline-none focus:border-liho-red" />
         </div>
         <div>
           <label class="block text-xs font-bold text-liho-subtext mb-1">預估進貨成本 ($/kg)</label>
@@ -273,7 +277,7 @@
     let selectedItemName = '空心菜';
     let selectedStaffName = '惠毓';
     let currentReason = '修邊削皮常態損耗';
-    let currentUnit = 'kg'; // 'kg' 或 'jin' (台斤)
+    let currentUnit = 'kg';
 
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -335,7 +339,6 @@
       });
     }
 
-    // 切換單位：公斤 (kg) vs 台斤 (jin)
     function setCostUnit(unit) {
       currentUnit = unit;
       const kgBtn = document.getElementById('unitKgBtn');
@@ -353,7 +356,7 @@
 
     function selectItem(name, price) {
       selectedItemName = name;
-      currentUnit = 'kg'; // 預設恢復為公斤
+      currentUnit = 'kg';
       setCostUnit('kg');
 
       document.getElementById('customCostInput').value = price;
@@ -368,6 +371,21 @@
         }
       });
 
+      calculateLoss();
+    }
+
+    function setZeroWasteQuick() {
+      if (currentMode === 'yield') {
+        const rawW = document.getElementById('rawWeightInput').value;
+        if (!rawW || parseFloat(rawW) <= 0) {
+          document.getElementById('rawWeightInput').value = 1000;
+          document.getElementById('usableWeightInput').value = 1000;
+        } else {
+          document.getElementById('usableWeightInput').value = rawW;
+        }
+      } else {
+        document.getElementById('directWasteWeightInput').value = 0;
+      }
       calculateLoss();
     }
 
@@ -452,11 +470,8 @@
       });
     }
 
-    // 核心精算：支援「公斤 vs 台斤」換算
     function calculateLoss() {
       const inputCost = parseFloat(document.getElementById('customCostInput').value) || 0;
-      
-      // 若單位為台斤，換算每公斤成本 = 台斤單價 / 0.6
       const unitCostKg = (currentUnit === 'jin') ? Math.round((inputCost / 0.6) * 10) / 10 : inputCost;
       
       document.getElementById('currentUnitCostDisplay').innerText = 
@@ -466,30 +481,46 @@
 
       let wasteWeight = 0;
       let yieldRateText = "良品率: 100%";
+      let hasValidInput = false;
 
       if (currentMode === 'yield') {
-        const rawW = parseFloat(document.getElementById('rawWeightInput').value) || 0;
-        const usableW = parseFloat(document.getElementById('usableWeightInput').value) || 0;
+        const rawStr = document.getElementById('rawWeightInput').value;
+        const usableStr = document.getElementById('usableWeightInput').value;
 
-        if (rawW > 0 && usableW >= 0) {
-          wasteWeight = Math.max(0, rawW - usableW);
-          const yieldRate = Math.min(100, (usableW / rawW) * 100).toFixed(1);
-          yieldRateText = `出成良品率: ${yieldRate}%`;
-          currentReason = `修整損耗 (良率 ${yieldRate}%)`;
+        if (rawStr !== "" && usableStr !== "") {
+          const rawW = parseFloat(rawStr) || 0;
+          const usableW = parseFloat(usableStr) || 0;
+
+          if (rawW > 0) {
+            hasValidInput = true;
+            wasteWeight = Math.max(0, rawW - usableW);
+            const yieldRate = Math.min(100, (usableW / rawW) * 100).toFixed(1);
+
+            if (wasteWeight === 0 || yieldRate >= 100) {
+              yieldRateText = "出成良品率: 100% (0損耗)";
+              currentReason = "全數使用 (0損耗 100%良率)";
+            } else {
+              yieldRateText = `出成良品率: ${yieldRate}%`;
+              currentReason = `修整損耗 (良率 ${yieldRate}%)`;
+            }
+          }
         }
       } else {
-        wasteWeight = parseFloat(document.getElementById('directWasteWeightInput').value) || 0;
-        yieldRateText = "報廢模式";
+        const directStr = document.getElementById('directWasteWeightInput').value;
+        if (directStr !== "") {
+          hasValidInput = true;
+          wasteWeight = Math.max(0, parseFloat(directStr) || 0);
+          yieldRateText = (wasteWeight === 0) ? "無報廢 (0損耗)" : "報廢模式";
+        }
       }
 
-      // 金額 = (損耗克數 / 1000) * 每公斤成本
       const wasteCost = Math.round((wasteWeight / 1000) * unitCostKg);
 
       document.getElementById('wasteWeightDisplay').innerText = wasteWeight;
       document.getElementById('wasteCostDisplay').innerText = wasteCost;
       document.getElementById('yieldRateTag').innerText = yieldRateText;
 
-      return { wasteWeight, wasteCost, unitCostKg, inputCost, unit: currentUnit };
+      return { wasteWeight, wasteCost, unitCostKg, inputCost, unit: currentUnit, hasValidInput };
     }
 
     async function fetchLatestPricesFromCloud() {
@@ -514,9 +545,10 @@
     }
 
     async function submitWasteRecord() {
-      const { wasteWeight, wasteCost, unitCostKg, inputCost, unit } = calculateLoss();
-      if (wasteWeight <= 0) {
-        alert("⚠️ 請先輸入磅秤重量（損耗重量需大於 0）！");
+      const { wasteWeight, wasteCost, unitCostKg, inputCost, unit, hasValidInput } = calculateLoss();
+
+      if (!hasValidInput) {
+        alert("⚠️ 請先輸入磅秤重量（原重與出餐餐重）！");
         return;
       }
 
@@ -533,8 +565,8 @@
         action: "record_waste",
         date: dateVal,
         itemName: selectedItemName,
-        rawWeight: currentMode === 'yield' ? document.getElementById('rawWeightInput').value : "-",
-        usableWeight: currentMode === 'yield' ? document.getElementById('usableWeightInput').value : "-",
+        rawWeight: currentMode === 'yield' ? (document.getElementById('rawWeightInput').value || 0) : "-",
+        usableWeight: currentMode === 'yield' ? (document.getElementById('usableWeightInput').value || 0) : "-",
         wasteWeight: wasteWeight,
         unitCostKg: unitCostKg,
         wasteCost: wasteCost,
@@ -553,7 +585,9 @@
         const result = await response.json();
 
         if (result.status === "success") {
-          alert(`✅ 成功入帳至「${result.fileName} ${result.sheetName || '損耗登記'}」！\n\n品項：${selectedItemName}\n損耗：${wasteWeight}g\n浪費金額：NT$ ${wasteCost} 元`);
+          const zeroMsg = (wasteWeight === 0) ? "🎉 達到 100% 完美使用率（0 損耗）！\n" : "";
+          // 彈窗文字已正式更新為「損耗成本」
+          alert(`✅ 成功入帳至「${result.fileName} ${result.sheetName || '損耗登記'}」！\n\n${zeroMsg}品項：${selectedItemName}\n損耗重量：${wasteWeight}g\n損耗成本：NT$ ${wasteCost} 元`);
           document.getElementById('rawWeightInput').value = "";
           document.getElementById('usableWeightInput').value = "";
           if (document.getElementById('directWasteWeightInput')) {
