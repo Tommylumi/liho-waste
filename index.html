@@ -5,9 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>里好餐桌 • 食材損耗精算系統</title>
   
+  <!-- 行動裝置全螢幕與圖示配置 (精準對齊您上傳的 icon.png) -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="里好損耗" />
+  <link rel="apple-touch-icon" href="icon.png?v=2" />
+  <link rel="icon" type="image/png" href="icon.png?v=2" />
+  <link rel="shortcut icon" href="icon.png?v=2" />
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -49,13 +53,11 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between select-none">
 
-  <!-- 頂部品牌導覽列 -->
+  <!-- 頂部品牌導覽列 (採用您剛上傳的 icon.png) -->
   <header class="bg-liho-red text-white shadow-md sticky top-0 z-50 px-4 py-3">
     <div class="max-w-md mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-2.5">
-        <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-inner overflow-hidden border border-liho-darkRed/20">
-          <span class="text-liho-red font-black text-lg">里</span>
-        </div>
+        <img src="icon.png?v=2" alt="里好損耗" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-white/20 shrink-0" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' rx=\'20\' fill=\'%23FAF7F2\'/><text x=\'50%\' y=\'56%\' font-family=\'sans-serif\' font-weight=\'900\' font-size=\'38\' fill=\'%232C2724\' dominant-baseline=\'middle\' text-anchor=\'middle\'>損耗</text></svg>';" />
         <div>
           <h1 class="text-base font-bold tracking-wider leading-tight">里好餐桌 • 食材損耗精算</h1>
           <p class="text-[11px] text-white/80 tracking-widest font-light">EAT BETTER. LIVE BETTER.</p>
@@ -99,9 +101,7 @@
       </div>
 
       <!-- 食材快捷按鈕區（支援動態新增） -->
-      <div class="grid grid-cols-4 gap-2" id="quickItemGrid">
-        <!-- 由 JavaScript 動態渲染按鈕 -->
-      </div>
+      <div class="grid grid-cols-4 gap-2" id="quickItemGrid"></div>
 
       <!-- 新增食材與自訂單價輸入列 -->
       <div class="pt-2 border-t border-liho-border/60 flex items-center justify-between gap-2">
@@ -198,12 +198,12 @@
     </button>
   </main>
 
-  <!-- 底部固定資訊 -->
+  <!-- 底部資訊 -->
   <footer class="text-center py-2.5 text-[11px] text-liho-subtext">
     里好餐桌 • 現場食材損耗與成本精算系統
   </footer>
 
-  <!-- 彈窗：員工自訂新增菜名 -->
+  <!-- 彈窗：新增自訂菜名 -->
   <div id="addCustomModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
       <div class="flex items-center justify-between border-b border-liho-border pb-2.5">
@@ -223,7 +223,6 @@
         <div>
           <label class="block text-xs font-bold text-liho-subtext mb-1">預估進貨成本 ($/kg)</label>
           <input type="number" id="newCustomItemCost" placeholder="例如：60" class="w-full text-sm border border-liho-border rounded-xl p-2.5 outline-none focus:border-liho-red" />
-          <p class="text-[10px] text-liho-subtext mt-1">若後端有抓到最新進價，系統將自動覆蓋此預估值。</p>
         </div>
       </div>
 
@@ -233,7 +232,7 @@
     </div>
   </div>
 
-  <!-- 彈窗：後端連線設定 -->
+  <!-- 彈窗：連線設定 -->
   <div id="settingsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
       <div class="flex items-center justify-between border-b border-liho-border pb-3">
@@ -249,7 +248,6 @@
         <div>
           <label class="block text-xs font-bold text-liho-subtext mb-1">Google Apps Script Web App URL</label>
           <input type="text" id="settingGasUrl" class="w-full text-xs border border-liho-border rounded-xl p-2.5 outline-none focus:border-liho-red" />
-          <p class="text-[10px] text-liho-subtext mt-1">與里好進貨系統共用同一支部署網址 (.../exec)</p>
         </div>
       </div>
 
@@ -262,15 +260,9 @@
   <script>
     const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbzdlLHGpB5gdXgitXSM6pifJR07WCFqYMIoKOrJQ81XjZpePvMAGCRgsrm1m_3YDlWl/exec";
     
-    // 最近叫貨品項清單（$/kg 預設基準價）
     const BASE_ITEMS = {
-      "空心菜": 55,
-      "萵苣": 65,
-      "蒜碎": 120,
-      "紅蘿蔔": 45,
-      "洋蔥": 40,
-      "青花": 90,
-      "青江菜": 50
+      "空心菜": 55, "萵苣": 65, "蒜碎": 120, "紅蘿蔔": 45,
+      "洋蔥": 40, "青花": 90, "青江菜": 50
     };
 
     let ingredientPrices = {};
