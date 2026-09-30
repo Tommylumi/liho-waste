@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>里好餐桌 • 食材損耗精算系統</title>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="里好損耗" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            liho: {
+              red: '#9B443B',
+              darkRed: '#7A322B',
+              green: '#4E7055',
+              lightGreen: '#EBF3ED',
+              bg: '#FAF7F2',
+              border: '#EAE1D5',
+              text: '#2C2724',
+              subtext: '#7A7269'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #FAF7F2;
+      color: #2C2724;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between select-none">
+
+  <!-- 頂部品牌導覽列 -->
+  <header class="bg-liho-red text-white shadow-md sticky top-0 z-50 px-4 py-3">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-inner overflow-hidden border border-liho-darkRed/20">
+          <span class="text-liho-red font-black text-lg">里</span>
+        </div>
+        <div>
+          <h1 class="text-base font-bold tracking-wider leading-tight">里好餐桌 • 食材損耗精算</h1>
+          <p class="text-[11px] text-white/80 tracking-widest font-light">EAT BETTER. LIVE BETTER.</p>
+        </div>
+      </div>
+      <button onclick="toggleSettingsModal()" class="text-white/80 hover:text-white p-1.5 rounded-full transition">
+        <i class="fa-solid fa-gear text-lg"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- 即時雲端進價同步狀態列 -->
+  <div class="bg-liho-lightGreen border-b border-liho-green/20 px-4 py-1.5 text-xs text-liho-green font-medium">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <span id="priceSyncStatus"><i class="fa-solid fa-circle-check mr-1"></i>已同步最新食材進價</span>
+      <button onclick="fetchLatestPricesFromCloud()" class="underline hover:text-liho-text">重新同步</button>
+    </div>
+  </div>
+
+  <!-- 主要內容操作區 -->
+  <main class="max-w-md mx-auto w-full p-4 flex-1 space-y-4">
+
+    <!-- 模式切換：備料修整(Yield) vs 直接報廢(Waste) -->
+    <div class="bg-white p-1 rounded-2xl border border-liho-border shadow-sm flex">
+      <button id="modeYieldBtn" onclick="switchMode('yield')" class="flex-1 py-2 text-center text-sm font-bold rounded-xl transition bg-liho-red text-white shadow">
+        <i class="fa-solid fa-kitchen-set mr-1.5"></i>備料修整 (原重/餐重)
+      </button>
+      <button id="modeDirectBtn" onclick="switchMode('direct')" class="flex-1 py-2 text-center text-sm font-bold rounded-xl transition text-liho-subtext hover:text-liho-text">
+        <i class="fa-solid fa-trash-can mr-1.5"></i>直接報廢 (變質/打翻)
+      </button>
+    </div>
+
+    <!-- 步驟 1：選擇蔬果食材 -->
+    <div class="bg-white p-4 rounded-2xl border border-liho-border shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-bold text-liho-subtext flex items-center">
+          <span class="w-5 h-5 rounded-full bg-liho-red text-white inline-flex items-center justify-center text-xs mr-1.5">1</span>
+          點選食材品項 (自動帶入成本)
+        </label>
+        <span id="currentUnitCostDisplay" class="text-xs font-bold text-liho-green">成本單價: $55/kg</span>
+      </div>
+
+      <!-- 食材快捷按鈕區（支援動態新增） -->
+      <div class="grid grid-cols-4 gap-2" id="quickItemGrid">
+        <!-- 由 JavaScript 動態渲染按鈕 -->
+      </div>
+
+      <!-- 新增食材與自訂單價輸入列 -->
+      <div class="pt-2 border-t border-liho-border/60 flex items-center justify-between gap-2">
+        <button type="button" onclick="openAddCustomModal()" class="py-1.5 px-3 bg-liho-lightGreen text-liho-green border border-liho-green/40 rounded-xl text-xs font-bold flex items-center hover:bg-liho-green hover:text-white transition">
+          <i class="fa-solid fa-plus mr-1"></i>新增菜名
+        </button>
+        <div class="flex items-center space-x-1">
+          <span class="text-xs text-liho-subtext font-medium">調整當次單價 $/kg:</span>
+          <input type="number" id="customCostInput" value="55" oninput="calculateLoss()" class="w-16 text-xs text-center font-bold border border-liho-border rounded-xl px-2 py-1.5 focus:ring-1 focus:ring-liho-red outline-none" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 步驟 2：輸入重量 -->
+    <div class="bg-white p-4 rounded-2xl border border-liho-border shadow-sm space-y-3">
+      <label class="text-xs font-bold text-liho-subtext flex items-center">
+        <span class="w-5 h-5 rounded-full bg-liho-red text-white inline-flex items-center justify-center text-xs mr-1.5">2</span>
+        輸入磅秤克數 (公克 g)
+      </label>
+
+      <!-- 備料修整模式輸入欄 -->
+      <div id="yieldInputGroup" class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] font-medium text-liho-subtext mb-1">
+            <i class="fa-solid fa-box mr-1"></i>進貨毛重 (原重 g)
+          </label>
+          <input type="number" id="rawWeightInput" placeholder="例如 3000" oninput="calculateLoss()" class="w-full text-lg font-bold text-center border-2 border-liho-border rounded-xl py-2.5 focus:border-liho-red focus:bg-liho-red/5 outline-none transition" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-medium text-liho-subtext mb-1">
+            <i class="fa-solid fa-bowl-food mr-1"></i>出餐淨重 (餐重 g)
+          </label>
+          <input type="number" id="usableWeightInput" placeholder="例如 2550" oninput="calculateLoss()" class="w-full text-lg font-bold text-center border-2 border-liho-border rounded-xl py-2.5 focus:border-liho-red focus:bg-liho-red/5 outline-none transition" />
+        </div>
+      </div>
+
+      <!-- 直接報廢模式輸入欄 -->
+      <div id="directInputGroup" class="hidden space-y-3">
+        <div>
+          <label class="block text-[11px] font-medium text-liho-subtext mb-1">損耗/報廢重量 (g)</label>
+          <input type="number" id="directWasteWeightInput" placeholder="例如 500" oninput="calculateLoss()" class="w-full text-lg font-bold text-center border-2 border-liho-border rounded-xl py-2.5 focus:border-liho-red outline-none" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-medium text-liho-subtext mb-1">報廢具體原因</label>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button type="button" onclick="setReason('葉片發霉變質')" class="reason-btn text-xs py-1.5 border border-liho-border rounded-lg bg-white">發霉變質</button>
+            <button type="button" onclick="setReason('備料切錯/打翻')" class="reason-btn text-xs py-1.5 border border-liho-border rounded-lg bg-white">切錯打翻</button>
+            <button type="button" onclick="setReason('過熟出水出味')" class="reason-btn text-xs py-1.5 border border-liho-border rounded-lg bg-white">過熟出水</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 步驟 3：即時損耗金額與良品率儀表板 -->
+    <div class="bg-gradient-to-br from-liho-lightGreen to-white p-4 rounded-2xl border border-liho-green/30 shadow-sm space-y-2">
+      <div class="flex items-center justify-between text-xs text-liho-subtext">
+        <span class="font-bold flex items-center text-liho-green">
+          <i class="fa-solid fa-calculator mr-1.5"></i>損耗成本即時換算
+        </span>
+        <span id="yieldRateTag" class="bg-liho-green/10 text-liho-green font-bold px-2 py-0.5 rounded-full text-[11px]">出成良品率: 100%</span>
+      </div>
+
+      <div class="flex items-baseline justify-between pt-1">
+        <div>
+          <span class="text-xs text-liho-subtext">削修損耗重量</span>
+          <p class="text-2xl font-black text-liho-text"><span id="wasteWeightDisplay">0</span> <span class="text-xs font-normal">g</span></p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-liho-red font-bold">本次浪費成本金額</span>
+          <p class="text-3xl font-black text-liho-red">NT$ <span id="wasteCostDisplay">0</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 經手同仁與日期 -->
+    <div class="bg-white p-3.5 rounded-2xl border border-liho-border shadow-sm space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-liho-subtext">經手同仁</span>
+        <input type="date" id="recordDate" class="text-xs border border-liho-border rounded-lg px-2 py-1 outline-none text-liho-text" />
+      </div>
+      <div class="grid grid-cols-5 gap-1.5">
+        <button type="button" onclick="setStaff('惠毓')" class="staff-btn py-2 text-xs font-bold border border-liho-border rounded-xl bg-white hover:bg-liho-red/5">惠毓</button>
+        <button type="button" onclick="setStaff('梓庭')" class="staff-btn py-2 text-xs font-bold border border-liho-border rounded-xl bg-white hover:bg-liho-red/5">梓庭</button>
+        <button type="button" onclick="setStaff('佩嘉')" class="staff-btn py-2 text-xs font-bold border border-liho-border rounded-xl bg-white hover:bg-liho-red/5">佩嘉</button>
+        <button type="button" onclick="setStaff('雨函')" class="staff-btn py-2 text-xs font-bold border border-liho-border rounded-xl bg-white hover:bg-liho-red/5">雨函</button>
+        <button type="button" onclick="setStaff('其他')" class="staff-btn py-2 text-xs font-bold border border-liho-border rounded-xl bg-white hover:bg-liho-red/5">其他</button>
+      </div>
+    </div>
+
+    <!-- 送出按鈕 -->
+    <button id="submitBtn" onclick="submitWasteRecord()" class="w-full py-4 bg-liho-green text-white font-bold text-base rounded-2xl shadow-lg hover:bg-opacity-95 active:scale-95 transition flex items-center justify-center space-x-2">
+      <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+      <span>確認無誤 • 直傳「烏日損耗登記」</span>
+    </button>
+  </main>
+
+  <!-- 底部固定資訊 -->
+  <footer class="text-center py-2.5 text-[11px] text-liho-subtext">
+    里好餐桌 • 現場食材損耗與成本精算系統
+  </footer>
+
+  <!-- 彈窗：員工自訂新增菜名 -->
+  <div id="addCustomModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between border-b border-liho-border pb-2.5">
+        <h3 class="font-bold text-sm text-liho-text flex items-center">
+          <i class="fa-solid fa-leaf mr-2 text-liho-green"></i>新增菜名 / 食材品項
+        </h3>
+        <button onclick="closeAddCustomModal()" class="text-liho-subtext hover:text-liho-text">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-liho-subtext mb-1">蔬菜食材名稱</label>
+          <input type="text" id="newCustomItemName" placeholder="例如：菠菜、白蘿蔔" class="w-full text-sm border border-liho-border rounded-xl p-2.5 outline-none focus:border-liho-red" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-liho-subtext mb-1">預估進貨成本 ($/kg)</label>
+          <input type="number" id="newCustomItemCost" placeholder="例如：60" class="w-full text-sm border border-liho-border rounded-xl p-2.5 outline-none focus:border-liho-red" />
+          <p class="text-[10px] text-liho-subtext mt-1">若後端有抓到最新進價，系統將自動覆蓋此預估值。</p>
+        </div>
+      </div>
+
+      <div class="flex space-x-2 pt-2">
+        <button onclick="saveNewCustomItem()" class="flex-1 py-2.5 bg-liho-green text-white text-xs font-bold rounded-xl shadow">確認新增至快捷選單</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 彈窗：後端連線設定 -->
+  <div id="settingsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between border-b border-liho-border pb-3">
+        <h3 class="font-bold text-sm text-liho-text flex items-center">
+          <i class="fa-solid fa-sliders mr-2 text-liho-red"></i>系統連線設定
+        </h3>
+        <button onclick="toggleSettingsModal()" class="text-liho-subtext hover:text-liho-text">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-liho-subtext mb-1">Google Apps Script Web App URL</label>
+          <input type="text" id="settingGasUrl" class="w-full text-xs border border-liho-border rounded-xl p-2.5 outline-none focus:border-liho-red" />
+          <p class="text-[10px] text-liho-subtext mt-1">與里好進貨系統共用同一支部署網址 (.../exec)</p>
+        </div>
+      </div>
+
+      <div class="flex space-x-2 pt-2">
+        <button onclick="saveSettings()" class="flex-1 py-2.5 bg-liho-red text-white text-xs font-bold rounded-xl shadow">儲存設定</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbzdlLHGpB5gdXgitXSM6pifJR07WCFqYMIoKOrJQ81XjZpePvMAGCRgsrm1m_3YDlWl/exec";
+    
+    // 最近叫貨品項清單（$/kg 預設基準價）
+    const BASE_ITEMS = {
+      "空心菜": 55,
+      "萵苣": 65,
+      "蒜碎": 120,
+      "紅蘿蔔": 45,
+      "洋蔥": 40,
+      "青花": 90,
+      "青江菜": 50
+    };
+
+    let ingredientPrices = {};
+    let currentMode = 'yield';
+    let selectedItemName = '空心菜';
+    let selectedStaffName = '惠毓';
+    let currentReason = '修邊削皮常態損耗';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramSheetUrl = urlParams.get('sheetUrl');
+      if (paramSheetUrl) {
+        localStorage.setItem('liho_gas_url', paramSheetUrl);
+      }
+
+      document.getElementById('settingGasUrl').value = getGasUrl();
+
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('recordDate').value = today;
+
+      loadStoredIngredients();
+      renderItemButtons();
+      selectItem('空心菜', ingredientPrices['空心菜'] || 55);
+      setStaff('惠毓');
+
+      fetchLatestPricesFromCloud();
+    });
+
+    function getGasUrl() {
+      return localStorage.getItem('liho_gas_url') || DEFAULT_GAS_URL;
+    }
+
+    function loadStoredIngredients() {
+      ingredientPrices = Object.assign({}, BASE_ITEMS);
+      try {
+        const customItems = JSON.parse(localStorage.getItem('liho_custom_ingredients') || '{}');
+        Object.assign(ingredientPrices, customItems);
+      } catch (e) {}
+    }
+
+    function renderItemButtons() {
+      const grid = document.getElementById('quickItemGrid');
+      grid.innerHTML = '';
+
+      Object.keys(ingredientPrices).forEach(item => {
+        const price = ingredientPrices[item];
+        const isSelected = (item === selectedItemName);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('data-name', item);
+        btn.onclick = () => selectItem(item, ingredientPrices[item] || price);
+        btn.className = `item-btn py-2 px-1 rounded-xl border text-xs font-bold transition flex flex-col items-center relative ${
+          isSelected 
+            ? 'border-liho-red bg-liho-red/10 text-liho-red shadow-sm' 
+            : 'border-liho-border bg-white text-liho-text hover:border-liho-red'
+        }`;
+
+        btn.innerHTML = `
+          <span class="truncate w-full text-center">${item}</span>
+          <span class="text-[10px] text-liho-green mt-0.5 price-tag">$${price}/kg</span>
+        `;
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectItem(name, price) {
+      selectedItemName = name;
+      document.getElementById('customCostInput').value = price;
+      document.getElementById('currentUnitCostDisplay').innerText = `成本單價: $${price}/kg`;
+
+      const buttons = document.querySelectorAll('.item-btn');
+      buttons.forEach(btn => {
+        if (btn.getAttribute('data-name') === name) {
+          btn.className = 'item-btn py-2 px-1 rounded-xl border border-liho-red bg-liho-red/10 text-liho-red shadow-sm text-xs font-bold transition flex flex-col items-center relative';
+        } else {
+          btn.className = 'item-btn py-2 px-1 rounded-xl border border-liho-border bg-white text-liho-text hover:border-liho-red text-xs font-bold transition flex flex-col items-center relative';
+        }
+      });
+
+      calculateLoss();
+    }
+
+    function openAddCustomModal() {
+      document.getElementById('newCustomItemName').value = '';
+      document.getElementById('newCustomItemCost').value = '';
+      document.getElementById('addCustomModal').classList.remove('hidden');
+    }
+
+    function closeAddCustomModal() {
+      document.getElementById('addCustomModal').classList.add('hidden');
+    }
+
+    function saveNewCustomItem() {
+      const name = document.getElementById('newCustomItemName').value.trim();
+      const cost = parseFloat(document.getElementById('newCustomItemCost').value) || 50;
+
+      if (!name) {
+        alert("請輸入食材品項名稱！");
+        return;
+      }
+
+      ingredientPrices[name] = cost;
+
+      try {
+        const customItems = JSON.parse(localStorage.getItem('liho_custom_ingredients') || '{}');
+        customItems[name] = cost;
+        localStorage.setItem('liho_custom_ingredients', JSON.stringify(customItems));
+      } catch (e) {}
+
+      renderItemButtons();
+      selectItem(name, cost);
+      closeAddCustomModal();
+    }
+
+    function switchMode(mode) {
+      currentMode = mode;
+      const yBtn = document.getElementById('modeYieldBtn');
+      const dBtn = document.getElementById('modeDirectBtn');
+      const yGroup = document.getElementById('yieldInputGroup');
+      const dGroup = document.getElementById('directInputGroup');
+
+      if (mode === 'yield') {
+        yBtn.className = "flex-1 py-2 text-center text-sm font-bold rounded-xl transition bg-liho-red text-white shadow";
+        dBtn.className = "flex-1 py-2 text-center text-sm font-bold rounded-xl transition text-liho-subtext hover:text-liho-text";
+        yGroup.classList.remove('hidden');
+        dGroup.classList.add('hidden');
+        currentReason = "修邊削皮常態損耗";
+      } else {
+        dBtn.className = "flex-1 py-2 text-center text-sm font-bold rounded-xl transition bg-liho-red text-white shadow";
+        yBtn.className = "flex-1 py-2 text-center text-sm font-bold rounded-xl transition text-liho-subtext hover:text-liho-text";
+        dGroup.classList.remove('hidden');
+        yGroup.classList.add('hidden');
+        currentReason = "葉片發霉變質";
+      }
+      calculateLoss();
+    }
+
+    function setStaff(name) {
+      selectedStaffName = name;
+      const buttons = document.querySelectorAll('.staff-btn');
+      buttons.forEach(btn => {
+        if (btn.innerText === name) {
+          btn.classList.add('border-liho-red', 'bg-liho-red', 'text-white');
+          btn.classList.remove('bg-white');
+        } else {
+          btn.classList.remove('border-liho-red', 'bg-liho-red', 'text-white');
+          btn.classList.add('bg-white');
+        }
+      });
+    }
+
+    function setReason(reason) {
+      currentReason = reason;
+      const buttons = document.querySelectorAll('.reason-btn');
+      buttons.forEach(btn => {
+        if (btn.innerText.includes(reason.substring(0, 2))) {
+          btn.classList.add('border-liho-red', 'bg-liho-red/10', 'text-liho-red', 'font-bold');
+        } else {
+          btn.classList.remove('border-liho-red', 'bg-liho-red/10', 'text-liho-red', 'font-bold');
+        }
+      });
+    }
+
+    function calculateLoss() {
+      const unitCostKg = parseFloat(document.getElementById('customCostInput').value) || 0;
+      let wasteWeight = 0;
+      let yieldRateText = "良品率: 100%";
+
+      if (currentMode === 'yield') {
+        const rawW = parseFloat(document.getElementById('rawWeightInput').value) || 0;
+        const usableW = parseFloat(document.getElementById('usableWeightInput').value) || 0;
+
+        if (rawW > 0 && usableW >= 0) {
+          wasteWeight = Math.max(0, rawW - usableW);
+          const yieldRate = Math.min(100, (usableW / rawW) * 100).toFixed(1);
+          yieldRateText = `出成良品率: ${yieldRate}%`;
+          currentReason = `修整損耗 (良率 ${yieldRate}%)`;
+        }
+      } else {
+        wasteWeight = parseFloat(document.getElementById('directWasteWeightInput').value) || 0;
+        yieldRateText = "報廢模式";
+      }
+
+      const wasteCost = Math.round((wasteWeight / 1000) * unitCostKg);
+
+      document.getElementById('wasteWeightDisplay').innerText = wasteWeight;
+      document.getElementById('wasteCostDisplay').innerText = wasteCost;
+      document.getElementById('yieldRateTag').innerText = yieldRateText;
+
+      return { wasteWeight, wasteCost, unitCostKg };
+    }
+
+    async function fetchLatestPricesFromCloud() {
+      const gasUrl = getGasUrl();
+      const statusEl = document.getElementById('priceSyncStatus');
+      try {
+        statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i>同步最新菜價...`;
+        const res = await fetch(`${gasUrl}?action=get_latest_prices`);
+        const data = await res.json();
+        if (data && data.prices) {
+          Object.assign(ingredientPrices, data.prices);
+          renderItemButtons();
+          if (ingredientPrices[selectedItemName]) {
+            document.getElementById('customCostInput').value = ingredientPrices[selectedItemName];
+            document.getElementById('currentUnitCostDisplay').innerText = `成本單價: $${ingredientPrices[selectedItemName]}/kg`;
+          }
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1 text-liho-green"></i>已同步最新食材進價`;
+        }
+      } catch (err) {
+        statusEl.innerHTML = `<i class="fa-solid fa-cloud mr-1 text-liho-subtext"></i>使用標準菜價基數`;
+      }
+    }
+
+    async function submitWasteRecord() {
+      const { wasteWeight, wasteCost, unitCostKg } = calculateLoss();
+      if (wasteWeight <= 0) {
+        alert("⚠️ 請先輸入磅秤重量（損耗重量需大於 0）！");
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitBtn');
+      const originalBtnHtml = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>傳送至 Google 試算表中...`;
+
+      const payload = {
+        action: "record_waste",
+        date: document.getElementById('recordDate').value,
+        itemName: selectedItemName,
+        rawWeight: currentMode === 'yield' ? document.getElementById('rawWeightInput').value : "-",
+        usableWeight: currentMode === 'yield' ? document.getElementById('usableWeightInput').value : "-",
+        wasteWeight: wasteWeight,
+        unitCostKg: unitCostKg,
+        wasteCost: wasteCost,
+        reason: currentReason,
+        staff: selectedStaffName,
+        targetSheet: "烏日損耗登記"
+      };
+
+      try {
+        const gasUrl = getGasUrl();
+        const response = await fetch(gasUrl, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.status === "success") {
+          alert(`✅ 成功入帳至「${result.fileName} 烏日損耗登記」！\n\n品項：${selectedItemName}\n損耗：${wasteWeight}g\n浪費金額：NT$ ${wasteCost} 元`);
+          document.getElementById('rawWeightInput').value = "";
+          document.getElementById('usableWeightInput').value = "";
+          if (document.getElementById('directWasteWeightInput')) {
+            document.getElementById('directWasteWeightInput').value = "";
+          }
+          calculateLoss();
+        } else {
+          alert("❌ 上傳失敗：" + (result.message || "未知錯誤"));
+        }
+      } catch (err) {
+        alert("❌ 連線異常，請檢查網路或設定網址：" + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHtml;
+      }
+    }
+
+    function toggleSettingsModal() {
+      const modal = document.getElementById('settingsModal');
+      modal.classList.toggle('hidden');
+    }
+
+    function saveSettings() {
+      const url = document.getElementById('settingGasUrl').value.trim();
+      if (url) {
+        localStorage.setItem('liho_gas_url', url);
+        alert("設定儲存成功！");
+        toggleSettingsModal();
+        fetchLatestPricesFromCloud();
+      }
+    }
+  </script>
+</body>
+</html>
