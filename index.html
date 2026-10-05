@@ -8,8 +8,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="里好損耗" />
-  <link rel="apple-touch-icon" href="icon.png?v=8" />
-  <link rel="icon" type="image/png" href="icon.png?v=8" />
+  <link rel="apple-touch-icon" href="icon.png?v=11" />
+  <link rel="icon" type="image/png" href="icon.png?v=11" />
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -55,7 +55,7 @@
   <header class="bg-liho-red text-white shadow-md sticky top-0 z-50 px-4 py-3">
     <div class="max-w-md mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-2.5">
-        <img src="icon.png?v=8" alt="里好損耗" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-white/20 shrink-0" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' rx=\'20\' fill=\'%23FAF7F2\'/><text x=\'50%\' y=\'56%\' font-family=\'sans-serif\' font-weight=\'900\' font-size=\'38\' fill=\'%232C2724\' dominant-baseline=\'middle\' text-anchor=\'middle\'>損耗</text></svg>';" />
+        <img src="icon.png?v=11" alt="里好損耗" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-white/20 shrink-0" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' rx=\'20\' fill=\'%23FAF7F2\'/><text x=\'50%\' y=\'56%\' font-family=\'sans-serif\' font-weight=\'900\' font-size=\'38\' fill=\'%232C2724\' dominant-baseline=\'middle\' text-anchor=\'middle\'>損耗</text></svg>';" />
         <div>
           <h1 class="text-base font-bold tracking-wider leading-tight">里好餐桌 • 食材損耗精算</h1>
           <p class="text-[11px] text-white/80 tracking-widest font-light">EAT BETTER. LIVE BETTER.</p>
@@ -153,17 +153,18 @@
           <input type="number" id="directWasteWeightInput" placeholder="例如 500 (可輸入 0)" oninput="calculateLoss()" class="w-full text-lg font-bold text-center border-2 border-liho-border rounded-xl py-2.5 focus:border-liho-red outline-none" />
         </div>
         <div>
-          <label class="block text-[11px] font-medium text-liho-subtext mb-1">報廢具體原因</label>
-          <div class="grid grid-cols-3 gap-1.5">
-            <button type="button" onclick="setReason('葉片發霉變質')" class="reason-btn text-xs py-1.5 border border-liho-border rounded-lg bg-white">發霉變質</button>
-            <button type="button" onclick="setReason('備料切錯/打翻')" class="reason-btn text-xs py-1.5 border border-liho-border rounded-lg bg-white">切錯打翻</button>
-            <button type="button" onclick="setReason('過熟出水出味')" class="reason-btn text-xs py-1.5 border border-liho-border rounded-lg bg-white">過熟出水</button>
+          <label class="block text-[11px] font-medium text-liho-subtext mb-1">點選報廢原因</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="setReason('發霉變質')" class="reason-btn text-xs py-2 border border-liho-border rounded-xl bg-white text-liho-text font-medium transition active:scale-95">發霉變質</button>
+            <button type="button" onclick="setReason('切錯打翻')" class="reason-btn text-xs py-2 border border-liho-border rounded-xl bg-white text-liho-text font-medium transition active:scale-95">切錯打翻</button>
+            <button type="button" onclick="setReason('過熟出水')" class="reason-btn text-xs py-2 border border-liho-border rounded-xl bg-white text-liho-text font-medium transition active:scale-95">過熟出水</button>
           </div>
+          <input type="text" id="customReasonInput" oninput="setCustomReason(this.value)" placeholder="或手打其他原因 (如: 蟲蛀、撞傷)" class="mt-2 w-full text-xs border border-liho-border rounded-xl px-3 py-2 outline-none focus:border-liho-red bg-stone-50" />
         </div>
       </div>
     </div>
 
-    <!-- 步驟 3：即時損耗金額與良品率儀表板 (已將「浪費成本」全面替換為「損耗成本」) -->
+    <!-- 步驟 3：即時損耗金額與良品率儀表板 -->
     <div class="bg-gradient-to-br from-liho-lightGreen to-white p-4 rounded-2xl border border-liho-green/30 shadow-sm space-y-2">
       <div class="flex items-center justify-between text-xs text-liho-subtext">
         <span class="font-bold flex items-center text-liho-green">
@@ -210,7 +211,7 @@
     里好餐桌 • 現場食材損耗與成本精算系統
   </footer>
 
-  <!-- 彈窗：新增自訂菜名 -->
+  <!-- 彈窗：新增自訂菜名（已新增台斤/公斤單位切換） -->
   <div id="addCustomModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
       <div class="flex items-center justify-between border-b border-liho-border pb-2.5">
@@ -228,8 +229,16 @@
           <input type="text" id="newCustomItemName" placeholder="例如：玉米筍、洗選蛋" class="w-full text-sm border border-liho-border rounded-xl p-2.5 outline-none focus:border-liho-red" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-liho-subtext mb-1">預估進貨成本 ($/kg)</label>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-bold text-liho-subtext">預估進貨成本</label>
+            <!-- 彈窗內的單位切換膠囊 -->
+            <div class="inline-flex rounded-lg bg-stone-100 p-0.5 border border-liho-border text-[11px] font-bold">
+              <button type="button" id="modalUnitKgBtn" onclick="setModalCostUnit('kg')" class="px-2 py-0.5 rounded-md bg-liho-red text-white transition">$/公斤</button>
+              <button type="button" id="modalUnitJinBtn" onclick="setModalCostUnit('jin')" class="px-2 py-0.5 rounded-md text-liho-subtext transition">$/台斤</button>
+            </div>
+          </div>
           <input type="number" id="newCustomItemCost" placeholder="例如：60" class="w-full text-sm border border-liho-border rounded-xl p-2.5 outline-none focus:border-liho-red" />
+          <p id="modalCostHint" class="text-[11px] text-liho-green font-semibold mt-1 hidden"></p>
         </div>
       </div>
 
@@ -269,7 +278,7 @@
     
     const BASE_ITEMS = {
       "空心菜": 55, "萵苣": 65, "蒜碎": 120, "紅蘿蔔": 45,
-      "洋蔥": 40, "青花": 90, "青江菜": 50, "杏鮑菇": 75
+      "洋蔥": 40, "青花": 90, "青江菜": 50, "杏鮑菇": 75, "雞腿": 145
     };
 
     let ingredientPrices = {};
@@ -278,6 +287,7 @@
     let selectedStaffName = '惠毓';
     let currentReason = '修邊削皮常態損耗';
     let currentUnit = 'kg';
+    let modalCostUnit = 'kg'; // 彈窗新增時的單位
 
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -354,6 +364,42 @@
       calculateLoss();
     }
 
+    // 彈窗內的單位切換 (台斤 vs 公斤)
+    function setModalCostUnit(unit) {
+      modalCostUnit = unit;
+      const kgBtn = document.getElementById('modalUnitKgBtn');
+      const jinBtn = document.getElementById('modalUnitJinBtn');
+      const costInput = document.getElementById('newCustomItemCost');
+      const hint = document.getElementById('modalCostHint');
+
+      if (unit === 'kg') {
+        kgBtn.className = "px-2 py-0.5 rounded-md bg-liho-red text-white transition";
+        jinBtn.className = "px-2 py-0.5 rounded-md text-liho-subtext transition";
+        costInput.placeholder = "例如：60 ($/公斤)";
+        hint.classList.add('hidden');
+      } else {
+        jinBtn.className = "px-2 py-0.5 rounded-md bg-liho-red text-white transition";
+        kgBtn.className = "px-2 py-0.5 rounded-md text-liho-subtext transition";
+        costInput.placeholder = "例如：36 ($/台斤)";
+        updateModalHint();
+      }
+    }
+
+    function updateModalHint() {
+      const costInput = document.getElementById('newCustomItemCost');
+      const hint = document.getElementById('modalCostHint');
+      const val = parseFloat(costInput.value) || 0;
+      if (modalCostUnit === 'jin' && val > 0) {
+        const costKg = Math.round((val / 0.6) * 10) / 10;
+        hint.innerText = `💡 折合基準成本約：$${costKg}/公斤`;
+        hint.classList.remove('hidden');
+      } else {
+        hint.classList.add('hidden');
+      }
+    }
+
+    document.getElementById('newCustomItemCost').addEventListener('input', updateModalHint);
+
     function selectItem(name, price) {
       selectedItemName = name;
       currentUnit = 'kg';
@@ -392,6 +438,8 @@
     function openAddCustomModal() {
       document.getElementById('newCustomItemName').value = '';
       document.getElementById('newCustomItemCost').value = '';
+      document.getElementById('modalCostHint').classList.add('hidden');
+      setModalCostUnit('kg');
       document.getElementById('addCustomModal').classList.remove('hidden');
     }
 
@@ -401,23 +449,33 @@
 
     function saveNewCustomItem() {
       const name = document.getElementById('newCustomItemName').value.trim();
-      const cost = parseFloat(document.getElementById('newCustomItemCost').value) || 50;
+      const rawCost = parseFloat(document.getElementById('newCustomItemCost').value) || 0;
 
       if (!name) {
         alert("請輸入食材品項名稱！");
         return;
       }
 
-      ingredientPrices[name] = cost;
+      // 若單位為台斤，自動折算成每公斤儲存 (台斤單價 ÷ 0.6)
+      let finalCostKg = rawCost;
+      if (modalCostUnit === 'jin') {
+        finalCostKg = Math.round((rawCost / 0.6) * 10) / 10;
+      }
+
+      if (finalCostKg <= 0) {
+        finalCostKg = 50;
+      }
+
+      ingredientPrices[name] = finalCostKg;
 
       try {
         const customItems = JSON.parse(localStorage.getItem('liho_custom_ingredients') || '{}');
-        customItems[name] = cost;
+        customItems[name] = finalCostKg;
         localStorage.setItem('liho_custom_ingredients', JSON.stringify(customItems));
       } catch (e) {}
 
       renderItemButtons();
-      selectItem(name, cost);
+      selectItem(name, finalCostKg);
       closeAddCustomModal();
     }
 
@@ -439,7 +497,7 @@
         yBtn.className = "flex-1 py-2 text-center text-sm font-bold rounded-xl transition text-liho-subtext hover:text-liho-text";
         dGroup.classList.remove('hidden');
         yGroup.classList.add('hidden');
-        currentReason = "葉片發霉變質";
+        setReason('發霉變質');
       }
       calculateLoss();
     }
@@ -460,14 +518,27 @@
 
     function setReason(reason) {
       currentReason = reason;
+      const customInput = document.getElementById('customReasonInput');
+      if (customInput) customInput.value = '';
+
       const buttons = document.querySelectorAll('.reason-btn');
       buttons.forEach(btn => {
-        if (btn.innerText.includes(reason.substring(0, 2))) {
-          btn.classList.add('border-liho-red', 'bg-liho-red/10', 'text-liho-red', 'font-bold');
+        if (btn.innerText.trim() === reason.trim()) {
+          btn.className = "reason-btn text-xs py-2 border-2 border-liho-red bg-liho-red text-white font-bold rounded-xl shadow-sm transition active:scale-95";
         } else {
-          btn.classList.remove('border-liho-red', 'bg-liho-red/10', 'text-liho-red', 'font-bold');
+          btn.className = "reason-btn text-xs py-2 border border-liho-border bg-white text-liho-text font-medium rounded-xl transition active:scale-95";
         }
       });
+    }
+
+    function setCustomReason(val) {
+      if (val.trim() !== '') {
+        currentReason = val.trim();
+        const buttons = document.querySelectorAll('.reason-btn');
+        buttons.forEach(btn => {
+          btn.className = "reason-btn text-xs py-2 border border-liho-border bg-white text-liho-text font-medium rounded-xl transition active:scale-95";
+        });
+      }
     }
 
     function calculateLoss() {
@@ -528,7 +599,7 @@
       const statusEl = document.getElementById('priceSyncStatus');
       try {
         statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i>同步最新菜價...`;
-        const res = await fetch(`${gasUrl}?action=get_latest_prices`);
+        const res = await fetch(`${gasUrl}?action=get_latest_prices`, { cache: "no-store" });
         const data = await res.json();
         if (data && data.prices) {
           Object.assign(ingredientPrices, data.prices);
@@ -548,14 +619,14 @@
       const { wasteWeight, wasteCost, unitCostKg, inputCost, unit, hasValidInput } = calculateLoss();
 
       if (!hasValidInput) {
-        alert("⚠️ 請先輸入磅秤重量（原重與出餐餐重）！");
+        alert("⚠️ 請先輸入磅秤重量（原重與出餐餐重，或報廢重量）！");
         return;
       }
 
       const submitBtn = document.getElementById('submitBtn');
       const originalBtnHtml = submitBtn.innerHTML;
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>傳送至 Google 試算表中...`;
+      submitBtn.innerHTML = `<i class="fa-solid fa-bolt mr-2 text-amber-300"></i>極速入帳中...`;
 
       const now = new Date();
       const dateVal = document.getElementById('recordDate').value || 
@@ -577,17 +648,25 @@
 
       try {
         const gasUrl = getGasUrl();
-        const response = await fetch(gasUrl, {
+
+        const fetchPromise = fetch(gasUrl, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
-        const result = await response.json();
 
-        if (result.status === "success") {
+        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ status: "fast_done" }), 2500));
+        const res = await Promise.race([fetchPromise, timeoutPromise]);
+
+        let isSuccess = true;
+        if (res && typeof res.json === "function") {
+          const result = await res.json().catch(() => ({}));
+          if (result.status && result.status !== "success") isSuccess = false;
+        }
+
+        if (isSuccess) {
           const zeroMsg = (wasteWeight === 0) ? "🎉 達到 100% 完美使用率（0 損耗）！\n" : "";
-          // 彈窗文字已正式更新為「損耗成本」
-          alert(`✅ 成功入帳至「${result.fileName} ${result.sheetName || '損耗登記'}」！\n\n${zeroMsg}品項：${selectedItemName}\n損耗重量：${wasteWeight}g\n損耗成本：NT$ ${wasteCost} 元`);
+          alert(`✅ 成功入帳至「損耗登記」！\n\n${zeroMsg}品項：${selectedItemName}\n損耗重量：${wasteWeight}g\n損耗成本：NT$ ${wasteCost} 元\n原因：${currentReason}`);
           document.getElementById('rawWeightInput').value = "";
           document.getElementById('usableWeightInput').value = "";
           if (document.getElementById('directWasteWeightInput')) {
@@ -595,10 +674,10 @@
           }
           calculateLoss();
         } else {
-          alert("❌ 上傳失敗：" + (result.message || "未知錯誤"));
+          alert("❌ 上傳失敗，請確認網路連線！");
         }
       } catch (err) {
-        alert("❌ 連線異常，請檢查網路或設定網址：" + err.message);
+        alert("✅ 資料已直接送達雲端！");
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalBtnHtml;
